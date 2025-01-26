@@ -249,7 +249,6 @@ MODVAR json_t *json_rehash_log = NULL;
 MODVAR DynamicSetBlock unknown_users_set;
 MODVAR DynamicSetBlock dynamic_set;
 
-MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
 int need_operclass_permissions_upgrade = 0;
@@ -1472,8 +1471,6 @@ void config_error(FORMAT_STRING(const char *format), ...)
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
 	unreal_log_raw(ULOG_ERROR, "config", "CONFIG_ERROR_GENERIC", NULL, buffer);
-	/* We cannot live with this */
-	config_error_flag = 1;
 }
 
 void config_error_missing(const char *filename, int line, const char *entry)
