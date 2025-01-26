@@ -912,12 +912,12 @@ ConfigFile *config_load(const char *filename, const char *displayname)
 #endif
 	if (fd == -1)
 	{
-		config_error("Couldn't open \"%s\": %s\n", filename, strerror(errno));
+		config_error("Couldn't open \"%s\": %s", filename, strerror(errno));
 		return NULL;
 	}
 	if (fstat(fd, &sb) == -1)
 	{
-		config_error("Couldn't fstat \"%s\": %s\n", filename, strerror(errno));
+		config_error("Couldn't fstat \"%s\": %s", filename, strerror(errno));
 		close(fd);
 		return NULL;
 	}
@@ -931,14 +931,14 @@ ConfigFile *config_load(const char *filename, const char *displayname)
 	buf = safe_alloc(sb.st_size+1);
 	if (buf == NULL)
 	{
-		config_error("Out of memory trying to load \"%s\"\n", filename);
+		config_error("Out of memory trying to load \"%s\"", filename);
 		close(fd);
 		return NULL;
 	}
 	ret = read(fd, buf, sb.st_size);
 	if (ret != sb.st_size)
 	{
-		config_error("Error reading \"%s\": %s\n", filename,
+		config_error("Error reading \"%s\": %s", filename,
 			ret == -1 ? strerror(errno) : strerror(EFAULT));
 		safe_free(buf);
 		close(fd);
@@ -1079,7 +1079,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 			case ';':
 				if (!curce)
 				{
-					config_status("%s:%i Ignoring extra semicolon\n",
+					config_status("%s:%i Ignoring extra semicolon",
 						filename, linenumber);
 					break;
 				}
@@ -1100,7 +1100,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				else if (curce->items)
 				{
 					config_error("%s:%i: New section start but previous section did not end properly. "
-					             "Check line %d and the line(s) before, you are likely missing a '};' there.\n",
+					             "Check line %d and the line(s) before, you are likely missing a '};' there.",
 							filename, linenumber, linenumber);
 					errors++;
 					continue;
@@ -1113,7 +1113,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 			case '}':
 				if (curce)
 				{
-					config_error("%s:%i: Missing semicolon (';') before close brace. Check line %d and the line(s) before.\n",
+					config_error("%s:%i: Missing semicolon (';') before close brace. Check line %d and the line(s) before.",
 						filename, linenumber, linenumber);
 					config_entry_free_all(curce);
 					config_free(curcf);
@@ -1123,7 +1123,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				else if (!cursection)
 				{
 					config_error("%s:%i: You have a close brace ('};') too many. "
-					              "Check line %d AND the lines above it from the previous block.\n",
+					              "Check line %d AND the lines above it from the previous block.",
 						filename, linenumber, linenumber);
 					errors++;
 					continue;
@@ -1181,13 +1181,13 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 							break;
 						} else if ((*ptr == '/') && (*(ptr+1) == '*'))
 						{
-							config_warn("%s:%i nested comments are not supported (comment started at line %d)\n",
+							config_warn("%s:%i nested comments are not supported (comment started at line %d)",
 								filename, linenumber, commentstart);
 						}
 					}
 					if (!*ptr)
 					{
-						config_error("%s:%i Comment on line %d does not end\n",
+						config_error("%s:%i Comment on line %d does not end",
 							filename, commentstart, commentstart);
 						errors++;
 						config_entry_free_all(curce);
@@ -1209,7 +1209,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				if (curce && curce->line_number != linenumber && cursection)
 				{
 					config_error("%s:%i: Missing semicolon (';') at end of line. "
-					             "Line %d must end with a ; character\n",
+					             "Line %d must end with a ; character",
 						filename, curce->line_number, curce->line_number);
 					errors++;
 
@@ -1240,7 +1240,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				}
 				if (!*ptr || (*ptr == '\n'))
 				{
-					config_error("%s:%i: Unterminated quote found\n",
+					config_error("%s:%i: Unterminated quote found",
 							filename, linenumber);
 					errors++;
 					config_entry_free_all(curce);
@@ -1251,7 +1251,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				{
 					if (curce->value)
 					{
-						config_error("%s:%i: Extra data detected. Perhaps missing a ';' or one too many?\n",
+						config_error("%s:%i: Extra data detected. Perhaps missing a ';' or one too many?",
 							filename, linenumber);
 						errors++;
 					}
@@ -1325,8 +1325,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 			processchar:
 				if ((*ptr == '*') && (*(ptr+1) == '/'))
 				{
-					config_status("%s:%i: Ignoring extra end comment\n",
-						filename, linenumber);
+					config_status("%s:%i: Ignoring extra end comment", filename, linenumber);
 					config_status("WARNING: Starting with UnrealIRCd 4.2.1 a /*-style comment stops as soon as the first */ is encountered. "
 					              "See https://www.unrealircd.org/docs/FAQ#Nesting_comments for more information.");
 					ptr++;
@@ -1342,15 +1341,15 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				{
 					if (curce)
 						config_error("%s: End of file reached but directive or block at line %i did not end properly. "
-									 "Perhaps a missing ; (semicolon) somewhere?\n",
+									 "Perhaps a missing ; (semicolon) somewhere?",
 							filename, curce->line_number);
 					else if (cursection)
 						config_error("%s: End of file reached but the section which starts at line %i did never end properly. "
-									 "Perhaps a missing }; ?\n",
+									 "Perhaps a missing }; ?",
 								filename, cursection->section_linenumber);
 					else
 						config_error("%s: Unexpected end of file. Some line or block did not end properly. "
-						             "Look for any missing } and };\n", filename);
+						             "Look for any missing } and };", filename);
 					errors++;
 					config_entry_free_all(curce);
 					config_free(curcf);
@@ -1360,7 +1359,7 @@ ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsig
 				{
 					if (curce->value)
 					{
-						config_error("%s:%i: Extra data detected. Check for a missing ; character at or around line %d\n",
+						config_error("%s:%i: Extra data detected. Check for a missing ; character at or around line %d",
 							filename, linenumber, linenumber-1);
 						errors++;
 					}
@@ -1395,7 +1394,7 @@ breakout:
 	if (curce)
 	{
 		config_error("%s: End of file reached but directive or block at line %i did not end properly. "
-		             "Perhaps a missing ; (semicolon) somewhere?\n",
+		             "Perhaps a missing ; (semicolon) somewhere?",
 			filename, curce->line_number);
 		errors++;
 		config_entry_free_all(curce);
@@ -1403,7 +1402,7 @@ breakout:
 	else if (cursection)
 	{
 		config_error("%s: End of file reached but the section which starts at line %i did never end properly. "
-		             "Perhaps a missing }; ?\n",
+		             "Perhaps a missing }; ?",
 				filename, cursection->section_linenumber);
 		errors++;
 	}
