@@ -8338,7 +8338,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						cep->file->filename, cep->line_number, *p);
 					errors++;
 				}
-			set_usermode(cep->value);
 		}
 		else if (!strcmp(cep->name, "snomask-on-oper")) {
 			char *wrong_snomask;
