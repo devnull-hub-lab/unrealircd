@@ -131,6 +131,7 @@ extern void config_error_unknownopt(const char *filename, int line, const char *
 extern void config_error_noname(const char *filename, int line, const char *block);
 extern void config_error_blank(const char *filename, int line, const char *block);
 extern void config_error_empty(const char *filename, int line, const char *block, const char *entry);
+extern int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors);
 extern void config_warn_duplicate(const char *filename, int line, const char *entry);
 extern int config_is_blankorempty(ConfigEntry *cep, const char *block);
 extern MODVAR int config_verbose;

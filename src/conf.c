@@ -303,6 +303,23 @@ const char *config_var(ConfigEntry *cep)
 	return buf;
 }
 
+/** Helper function for erroring on duplicate items.
+ */
+int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
+{
+	if (*var)
+	{
+		config_error("%s:%d: Duplicate %s directive",
+			ce->file->filename, ce->line_number,
+			ce->name);
+		(*errors)++;
+		return 1;
+	} else {
+		*var = 1;
+	}
+	return 0;
+}
+
 void port_range(const char *string, int *start, int *end)
 {
 	char buf[256];
@@ -4101,7 +4118,7 @@ void new_permissions_system(ConfigFile *conf, ConfigEntry *ce)
 
 int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 {
-	char has_permissions = 0, has_parent = 0;
+	int has_permissions = 0, has_parent = 0;
 	ConfigEntry *cep;
 	int	errors = 0;
 
@@ -4123,12 +4140,7 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->name, "parent"))
 		{
 			CheckNull(cep);
-			if (has_parent)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "operclass::parent");
-				continue;
-			}
+			config_detect_duplicate(&has_parent, cep, &errors);
 			/* A -direct- loop is easy to detect.
 			 * We also have code elsewhere to detect loops
 			 * like a->b->a->b->a->b.
@@ -4144,14 +4156,7 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->name, "permissions"))
 		{
-			if (has_permissions)
-			{
-				config_warn_duplicate(cep->file->filename,
-				cep->line_number, "operclass::permissions");
-				continue;
-			}
-			has_permissions = 1;
-			continue;
+			config_detect_duplicate(&has_permissions, cep, &errors);
 		} else
 		if (!strcmp(cep->name, "privileges"))
 		{
@@ -4163,7 +4168,6 @@ int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
 			config_error_unknown(cep->file->filename,
 				cep->line_number, "operclass", cep->name);
 			errors++;
-			continue;
 		}
 	}
 
@@ -4610,9 +4614,9 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	int errors = 0;
-	char has_mask = 0; /* mandatory */
-	char has_password = 0; /* mandatory */
-	char has_type = 0;
+	int has_mask = 0; /* mandatory */
+	int has_password = 0; /* mandatory */
+	int has_type = 0;
 	ProxyType proxy_type = 0;
 
 	if (!strcmp(ce->name, "webirc"))
@@ -4653,13 +4657,7 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->name, "password"))
 		{
-			if (has_password)
-			{
-				config_warn_duplicate(cep->file->filename, 
-					cep->line_number, "proxy::password");
-				continue;
-			}
-			has_password = 1;
+			config_detect_duplicate(&has_password, cep, &errors);
 			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
 		}
@@ -5903,9 +5901,9 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	int		errors = 0;
 	Hook *h;
-	char has_ip = 0, has_hostname = 0, has_mask = 0, has_match = 0;
-	char has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
-	char has_redirectserver = 0, has_redirectport = 0, has_options = 0;
+	int has_ip = 0, has_hostname = 0, has_mask = 0, has_match = 0;
+	int has_maxperip = 0, has_global_maxperip = 0, has_password = 0, has_class = 0;
+	int has_redirectserver = 0, has_redirectport = 0, has_options = 0;
 	int hostname_possible_silliness = 0;
 
 	if (ce->value)
@@ -6052,13 +6050,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->name, "password"))
 		{
-			if (has_password)
-			{
-				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "allow::password");
-				continue;
-			}
-			has_password = 1;
+			config_detect_duplicate(&has_password, cep, &errors);
 			/* some auth check stuff? */
 			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
@@ -6576,23 +6568,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	return 0;
 }
 
-/** Helper function for erroring on duplicate items.
- */
-int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
-{
-	if (*var)
-	{
-		config_error("%s:%d: Duplicate %s directive",
-			ce->file->filename, ce->line_number,
-			ce->name);
-		(*errors)++;
-		return 1;
-	} else {
-		*var = 1;
-	}
-	return 0;
-}
-
 int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
@@ -6601,7 +6576,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	int has_incoming = 0, has_incoming_mask = 0, has_incoming_match = 0, has_outgoing = 0, has_outgoing_file = 0;
 	int has_outgoing_bind_ip = 0, has_outgoing_hostname = 0, has_outgoing_port = 0;
 	int has_outgoing_options = 0, has_hub = 0, has_leaf = 0, has_leaf_depth = 0;
-	int has_password = 0, has_class = 0, has_options = 0;
+	int has_password = 0, has_class = 0, has_options = 0, has_tls_options = 0;
 
 	if (!ce->value)
 	{
@@ -6722,6 +6697,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->name, "ssl-options") || !strcmp(cepp->name, "tls-options"))
 				{
+					config_detect_duplicate(&has_tls_options, cepp, &errors);
 					test_tlsblock(conf, cepp, &errors);
 				}
 				else
@@ -7714,16 +7690,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			safe_strdup(tempiConf.channel_command_prefix, cep->value);
 		}
 		else if (!strcmp(cep->name, "restrict-channelmodes")) {
-			int i;
-			char *p = safe_alloc(strlen(cep->value) + 1), *x = p;
-			/* The data should be something like 'GL' or something,
-			 * but just in case users use '+GL' then ignore the + (and -).
-			 */
-			for (i=0; i < strlen(cep->value); i++)
-				if ((cep->value[i] != '+') && (cep->value[i] != '-'))
-					*x++ = cep->value[i];
-			*x = '\0';
-			tempiConf.restrict_channelmodes = p;
+			safe_strdup(tempiConf.restrict_channelmodes, cep->value);
 		}
 		else if (!strcmp(cep->name, "restrict-extendedbans")) {
 			safe_strdup(tempiConf.restrict_extendedbans, cep->value);
@@ -8633,15 +8600,19 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			CheckNull(cep);
 			CheckDuplicate(cep, restrict_channelmodes, "restrict-channelmodes");
-			if (cep->name) {
-				int warn = 0;
+			if (cep->name)
+			{
 				char *p;
+
 				for (p = cep->value; *p; p++)
+				{
 					if ((*p == '+') || (*p == '-'))
-						warn = 1;
-				if (warn) {
-					config_status("%s:%i: warning: set::restrict-channelmodes: should only contain modechars, no + or -.\n",
-						cep->file->filename, cep->line_number);
+					{
+						config_error("%s:%i: set::restrict-channelmodes: may only contain mode characters, no + or -.\n",
+							cep->file->filename, cep->line_number);
+						errors++;
+						break;
+					}
 				}
 			}
 		}
@@ -11694,16 +11665,20 @@ int test_dynamic_set_block_item(ConfigFile *conf, const char *security_group, Co
 	}
 	else if (!strcmp(cep->name, "restrict-usermodes"))
 	{
-		char *p;
-
 		CheckNull(cep);
-		for (p = cep->value; *p; p++)
+		if (cep->name)
 		{
-			if ((*p == '+') || (*p == '-'))
+			char *p;
+
+			for (p = cep->value; *p; p++)
 			{
-				config_status("%s:%i: warning: set::restrict-usermodes: should only contain modechars, no + or -.\n",
-					cep->file->filename, cep->line_number);
-				break;
+				if ((*p == '+') || (*p == '-'))
+				{
+					config_error("%s:%i: set::restrict-usermodes: may only contain mode characters, no + or -.\n",
+						cep->file->filename, cep->line_number);
+					errors++;
+					break;
+				}
 			}
 		}
 	} else
