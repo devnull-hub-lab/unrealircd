@@ -8599,20 +8599,11 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			CheckNull(cep);
 			CheckDuplicate(cep, restrict_channelmodes, "restrict-channelmodes");
-			if (cep->name)
+			if (strchr(cep->value, '+') || strchr(cep->value, '-'))
 			{
-				char *p;
-
-				for (p = cep->value; *p; p++)
-				{
-					if ((*p == '+') || (*p == '-'))
-					{
-						config_error("%s:%i: set::restrict-channelmodes: may only contain mode characters, no + or -.\n",
-							cep->file->filename, cep->line_number);
-						errors++;
-						break;
-					}
-				}
+				config_error("%s:%i: set::restrict-channelmodes: may only contain mode characters, no + or -.",
+					cep->file->filename, cep->line_number);
+				errors++;
 			}
 		}
 		else if (!strcmp(cep->name, "restrict-extendedbans"))
@@ -11665,20 +11656,11 @@ int test_dynamic_set_block_item(ConfigFile *conf, const char *security_group, Co
 	else if (!strcmp(cep->name, "restrict-usermodes"))
 	{
 		CheckNull(cep);
-		if (cep->name)
+		if (strchr(cep->value, '+') || strchr(cep->value, '-'))
 		{
-			char *p;
-
-			for (p = cep->value; *p; p++)
-			{
-				if ((*p == '+') || (*p == '-'))
-				{
-					config_error("%s:%i: set::restrict-usermodes: may only contain mode characters, no + or -.\n",
-						cep->file->filename, cep->line_number);
-					errors++;
-					break;
-				}
-			}
+			config_error("%s:%i: set::restrict-usermodes: may only contain mode characters, no + or -.",
+				cep->file->filename, cep->line_number);
+			errors++;
 		}
 	} else
 	{
