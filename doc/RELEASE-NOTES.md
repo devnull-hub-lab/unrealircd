@@ -5,16 +5,40 @@ This is the git version (development version). This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
-* TODO
+* If `unrealircd.conf` doesn't exist then we now offer to copy
+  the example configuration (showing a list of languages
+  to pick from).
+* Ship with an offline copy of the wiki documentation
+  (`doc/unrealircd_wiki.zim`). This is really only meant for cases
+  where the wiki is unavailable, eg you don't have an internet
+  connection, some major outage, etc.
+  See
+  [ZIM](https://en.wikipedia.org/wiki/ZIM_(file_format))
+  and
+  [Kiwix](https://en.wikipedia.org/wiki/Kiwix)
+  for more information.
 
 ### Changes:
-* TODO
+* Update the example configuration:
+  * Mark specific sections with "CHANGE THIS" for people who are in a hurry
+    and really only want to do the bare minimum to get the IRCd booted.
+  * More things are commented out by default, like example link blocks
+    and ulines.
+  * In addition to the the default ircd.log text file log block, also
+    add a
+    [JSON log block](https://www.unrealircd.org/docs/JSON_logging#Enabling_in_disk_logging).
+    JSON logging includes a lot of information about every event so is
+    great for auditing purposes and machine readable.
+* Error on some more duplicate config items, eg allow::password.
+* Make the `./Config` question about
+  [remote includes](https://www.unrealircd.org/docs/Remote_includes)
+  a bit more clear. The `https://` protocol is always supported and this
+  question is only about supporting *other* protocols and using the cURL
+  library.
 
 ### Fixes:
-* TODO
-
-### Developers and protocol:
-* TODO
+* Fix make_channel() not checking minimal validity of channel names.
+  Only an issue for (bad) trusted remote server traffic.
 
 UnrealIRCd 6.1.9.1
 -------------------
