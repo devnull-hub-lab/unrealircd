@@ -19,7 +19,10 @@ $TESTSSL --help >/dev/null || exit 1
 
 
 # This is the actual scan, later on we use the 'testssl.csv' result
-$TESTSSL --nodns none --cipher-per-proto --std --fs --csvfile testssl.csv --logfile testssl.log 127.0.0.1:5901
+$TESTSSL --nodns none --cipher-per-proto --std --fs --csvfile testssl.pre.csv --logfile testssl.log 127.0.0.1:5901
+
+# Filter this useless stuff out
+cat testssl.pre.csv|grep -vF "No engine or GOST support" >testssl.csv
 
 # Now check if profile matches, if so.. everything is ok.
 FAILED=1
