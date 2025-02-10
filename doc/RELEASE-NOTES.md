@@ -8,6 +8,7 @@ in progress and may not always be a stable version.
 * If `unrealircd.conf` doesn't exist then we now offer to copy
   the example configuration (showing a list of languages
   to pick from).
+* In target-flood log messages now show the message type (eg PRIVMSG).
 * Ship with an offline copy of the wiki documentation
   (`doc/unrealircd_wiki.zim`). This is really only meant for cases
   where the wiki is unavailable, eg you don't have an internet
@@ -37,14 +38,16 @@ in progress and may not always be a stable version.
   library.
 
 ### Fixes:
+* Fix compile problems on (upcoming) GCC 15 as it assumes C23 by default.
 * Fix make_channel() not checking minimal validity of channel names.
   Only an issue for (bad) trusted remote server traffic.
 
 UnrealIRCd 6.1.9.1
 -------------------
-(UnrealIRCd 6.1.9.1 fixes a bug in the TLS ciphers of 6.1.9. The original
- 6.1.9 release notes are below)
+UnrealIRCd 6.1.9.1 fixes a bug in the TLS ciphers of 6.1.9.
 
+UnrealIRCd 6.1.9
+-----------------
 This 6.1.9 release fixes a number of bugs such as IPv6 hosts not resolving
 in UnrealIRCd 6.1.8/6.1.8.1 and 100% CPU usage in some circumstances.
 It also changes the SSL/TLS defaults to make things a little safer/better.

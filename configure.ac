@@ -886,6 +886,25 @@ CHECK_LIBMAXMINDDB
 
 UNRLINCDIR="`pwd`/include"
 
+dnl This is at the end so the (potential) -std=gnu17 is not used
+dnl when compiling libraries, as their requirements may be different.
+AC_MSG_CHECKING([if explicit -std=gnu17 is needed])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+	[[#include <sys/types.h>
+	  #include <stdlib.h>
+	  #include <sys/socket.h>
+	  #include <netinet/in.h>
+	  #include <netinet/tcp.h>
+	  #include <sys/socket.h>]],
+	[[
+	  void (*test)();
+	  test = exit;
+	  test(0);
+	]])],
+	[AC_MSG_RESULT(no)],
+	[CFLAGS="$CFLAGS -std=gnu17"
+	AC_MSG_RESULT(yes)])
+
 dnl Moved to the very end to ensure it doesn't affect any libs or tests.
 if test "$ac_cv_werror" = "yes" ; then
 	CFLAGS="$CFLAGS -Werror"
