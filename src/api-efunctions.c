@@ -64,7 +64,7 @@ TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned short target, BanA
                            const char *setby,
                            time_t expire_at, time_t set_at,
                            time_t spamf_tkl_duration, const char *spamf_tkl_reason,
-                           int flags);
+                           int input_conversion, int flags);
 TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
                              const char *reason, const char *set_by,
                              time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);

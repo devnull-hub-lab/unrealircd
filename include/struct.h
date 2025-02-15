@@ -1238,6 +1238,9 @@ struct NameBan {
 	char *reason; /**< Reason */
 };
 
+#define INPUT_CONVERSION_STRIP_CONTROL_CODES	0x1
+#define INPUT_CONVERSION_DEFAULT		(INPUT_CONVERSION_STRIP_CONTROL_CODES)
+
 /** Spamfilter sub-struct of TKL entry (Spamfilter) */
 struct Spamfilter {
 	unsigned short target;
@@ -1250,7 +1253,8 @@ struct Spamfilter {
 	char *id; /**< ID */
 	long long hits; /**< Spamfilter hits (except exempts) */
 	long long hits_except; /**< Spamfilter hits by exempt clients */
-	SecurityGroup *except; /**< Don't run this spamfitler at all for these users (not counting towards hits_except btw) */
+	SecurityGroup *except; /**< Don't run this spamfilter at all for these users (not counting towards hits_except btw) */
+	int input_conversion;	/**< How we should handle the input */
 };
 
 /** Ban exception sub-struct of TKL entry (ELINE) */

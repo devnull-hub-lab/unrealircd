@@ -74,7 +74,7 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
                          const char *set_by,
                          time_t expire_at, time_t set_at,
                          time_t spamf_tkl_duration, const char *spamf_tkl_reason,
-                         int flags);
+                         int input_conversion, int flags);
 void _sendnotice_tkl_del(char *removed_by, TKL *tkl);
 void _sendnotice_tkl_add(TKL *tkl);
 void _free_tkl(TKL *tkl);
@@ -269,13 +269,24 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
+// Simple for now; will be improved later
+int input_conversion_strtoval(const char *name)
+{
+	if (!strcmp(name, "none"))
+		return 0;
+	if (!strcmp(name, "strip-control-codes"))
+		return INPUT_CONVERSION_STRIP_CONTROL_CODES;
+	return -1;
+}
+
 /** Test a spamfilter { } block in the configuration file */
 int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
 	char *match = NULL, *reason = NULL;
-	char has_target = 0, has_id = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0, has_bantime = 0, has_match_type = 0;
+	char has_target = 0, has_id = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0;
+	char has_bantime = 0, has_match_type = 0, has_input_conversion = 0;
 	char central_spamfilter = 0;
 	int match_type = 0;
 
@@ -330,6 +341,45 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 					if (!spamfilter_getconftargets(cepp->name))
 					{
 						config_error("%s:%i: unknown spamfiler target type '%s'",
+							cepp->file->filename,
+							cepp->line_number, cepp->name);
+						errors++;
+					}
+				}
+			}
+			else
+			{
+				config_error_empty(cep->file->filename,
+					cep->line_number, "spamfilter", cep->name);
+				errors++;
+			}
+			continue;
+		} else
+		if (!strcmp(cep->name, "input-conversion"))
+		{
+			if (has_input_conversion)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::input-conversion");
+				continue;
+			}
+			has_input_conversion = 1;
+			if (cep->value)
+			{
+				if (input_conversion_strtoval(cep->value)<0)
+				{
+					config_error("%s:%i: unknown input-conversion method '%s'",
+						cep->file->filename, cep->line_number, cep->value);
+					errors++;
+				}
+			}
+			else if (cep->items)
+			{
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+				{
+					if (input_conversion_strtoval(cepp->name)<0)
+					{
+						config_error("%s:%i: unknown input-conversion method '%s'",
 							cepp->file->filename,
 							cepp->line_number, cepp->name);
 						errors++;
@@ -559,6 +609,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	char *banreason = tempiConf.spamfilter_ban_reason;
 	BanAction *action = NULL;
 	int target = 0;
+	int input_conversion = INPUT_CONVERSION_DEFAULT;
 	int match_type = 0;
 	Match *m = NULL;
 	int flag = TKL_FLAG_CONFIG;
@@ -598,6 +649,16 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 			{
 				for (cepp = cep->items; cepp; cepp = cepp->next)
 					target |= spamfilter_getconftargets(cepp->name);
+			}
+		}
+		else if (!strcmp(cep->name, "input-conversion"))
+		{
+			if (cep->value)
+				input_conversion = input_conversion_strtoval(cep->value);
+			else
+			{
+				for (cepp = cep->items; cepp; cepp = cepp->next)
+					input_conversion |= input_conversion_strtoval(cepp->name);
 			}
 		}
 		else if (!strcmp(cep->name, "action"))
@@ -666,6 +727,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	                   TStime(),
 	                   bantime,
 	                   banreason,
+	                   input_conversion,
 	                   flag);
 	return 1;
 }
@@ -2817,6 +2879,7 @@ TKL *tkl_find_head(char type, char *hostmask, TKL *def)
  * @param set_at              When was the ban set
  * @param spamf_tkl_duration  When will the ban placed by spamfilter expire
  * @param spamf_tkl_reason    What is the reason for bans placed by spamfilter
+ * @param input_conversion    Input conversion(s) like stripping control codes
  * @param flags               Any TKL_FLAG_* (TKL_FLAG_CONFIG, etc..)
  * @returns                   The TKL entry, or NULL in case of a problem,
  *                            such as a regex failing to compile, memory problem, ..
@@ -2826,7 +2889,7 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
                          const char *set_by,
                          time_t expire_at, time_t set_at,
                          time_t tkl_duration, const char *tkl_reason,
-                         int flags)
+                         int input_conversion, int flags)
 {
 	TKL *tkl;
 	int index;
@@ -2857,6 +2920,7 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
 	}
 	tkl->ptr.spamfilter->target = target;
 	tkl->ptr.spamfilter->action = action;
+	tkl->ptr.spamfilter->input_conversion = input_conversion;
 	tkl->ptr.spamfilter->match = match;
 	safe_strdup(tkl->ptr.spamfilter->tkl_reason, tkl_reason);
 	tkl->ptr.spamfilter->except = except;
@@ -4659,7 +4723,7 @@ CMD_FUNC(cmd_tkl_add)
 			}
 			tkl = tkl_add_spamfilter(type, NULL, target, banact_value_to_struct(action), m, NULL, NULL,
 			                         set_by, expire_at, set_at,
-			                         tkl_duration, tkl_reason, 0);
+			                         tkl_duration, tkl_reason, INPUT_CONVERSION_DEFAULT, 0);
 		}
 	} else
 	{
@@ -5463,7 +5527,10 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 			}
 #endif
 
-			ret = unreal_match(tkl->ptr.spamfilter->match, str);
+			if (tkl->ptr.spamfilter->input_conversion == INPUT_CONVERSION_STRIP_CONTROL_CODES)
+				ret = unreal_match(tkl->ptr.spamfilter->match, str); /* stripcontrolcodes */
+			else
+				ret = unreal_match(tkl->ptr.spamfilter->match, str_in); /* raw */
 
 #ifdef SPAMFILTER_DETECTSLOW
 			if (tkl->ptr.spamfilter->match->type == MATCH_PCRE_REGEX)

@@ -815,7 +815,7 @@ extern MODVAR TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned shor
                                          const char *setby,
                                          time_t expire_at, time_t set_at,
                                          time_t spamf_tkl_duration, const char *spamf_tkl_reason,
-                                         int flags);
+                                         int input_conversion, int flags);
 extern MODVAR TKL *(*find_tkl_serverban)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_nameban)(int type, const char *name, int hold);
