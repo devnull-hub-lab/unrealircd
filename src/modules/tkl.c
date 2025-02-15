@@ -74,7 +74,9 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
                          const char *set_by,
                          time_t expire_at, time_t set_at,
                          time_t spamf_tkl_duration, const char *spamf_tkl_reason,
-                         int input_conversion, int flags);
+                         int input_conversion,
+                         SpamfilterShowMessageContentOnHit show_message_content_on_hit,
+                         int flags);
 void _sendnotice_tkl_del(char *removed_by, TKL *tkl);
 void _sendnotice_tkl_add(TKL *tkl);
 void _free_tkl(TKL *tkl);
@@ -287,6 +289,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	char *match = NULL, *reason = NULL;
 	char has_target = 0, has_id = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0;
 	char has_bantime = 0, has_match_type = 0, has_input_conversion = 0;
+	char has_show_message_content_on_hit = 0;
 	char central_spamfilter = 0;
 	int match_type = 0;
 
@@ -493,6 +496,22 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			}
 			has_match_type = 1;
 		}
+		else if (!strcmp(cep->name, "show-message-content-on-hit"))
+		{
+			if (has_show_message_content_on_hit)
+			{
+				config_warn_duplicate(cep->file->filename,
+					cep->line_number, "spamfilter::show-message-content-on-hit");
+				continue;
+			}
+			has_show_message_content_on_hit = 1;
+			if (!spamfilter_show_message_content_on_hit_strtoval(cep->value))
+			{
+				config_error("%s:%i: spamfilter::show-message-content-on-hit: unknown value '%s'",
+				             cep->file->filename, cep->line_number, cep->value);
+				errors++;
+			}
+		}
 		else if (!strcmp(cep->name, "except"))
 		{
 			test_match_block(cf, cep, &errors);
@@ -614,6 +633,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	Match *m = NULL;
 	int flag = TKL_FLAG_CONFIG;
 	SecurityGroup *except = NULL;
+	SpamfilterShowMessageContentOnHit show_message_content_on_hit = 0;
 
 	/* We are only interested in spamfilter { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamfilter"))
@@ -681,6 +701,10 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 		{
 			conf_match_block(cf, cep, &except);
 		}
+		else if (!strcmp(cep->name, "show-message-content-on-hit"))
+		{
+			show_message_content_on_hit = spamfilter_show_message_content_on_hit_strtoval(cep->value);
+		}
 	}
 
 	if (!match && rule)
@@ -728,6 +752,7 @@ int tkl_config_run_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type)
 	                   bantime,
 	                   banreason,
 	                   input_conversion,
+	                   show_message_content_on_hit,
 	                   flag);
 	return 1;
 }
@@ -2889,7 +2914,9 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
                          const char *set_by,
                          time_t expire_at, time_t set_at,
                          time_t tkl_duration, const char *tkl_reason,
-                         int input_conversion, int flags)
+                         int input_conversion,
+                         SpamfilterShowMessageContentOnHit show_message_content_on_hit,
+                         int flags)
 {
 	TKL *tkl;
 	int index;
@@ -2926,6 +2953,7 @@ TKL *_tkl_add_spamfilter(int type, const char *id, unsigned short target, BanAct
 	tkl->ptr.spamfilter->except = except;
 	tkl->ptr.spamfilter->tkl_duration = tkl_duration;
 	safe_strdup(tkl->ptr.spamfilter->id, id);
+	tkl->ptr.spamfilter->show_message_content_on_hit = show_message_content_on_hit;
 
 	if (tkl->ptr.spamfilter->target & SPAMF_USER)
 		loop.do_bancheck_spamf_user = 1;
@@ -4723,7 +4751,7 @@ CMD_FUNC(cmd_tkl_add)
 			}
 			tkl = tkl_add_spamfilter(type, NULL, target, banact_value_to_struct(action), m, NULL, NULL,
 			                         set_by, expire_at, set_at,
-			                         tkl_duration, tkl_reason, INPUT_CONVERSION_DEFAULT, 0);
+			                         tkl_duration, tkl_reason, INPUT_CONVERSION_DEFAULT, 0, 0);
 		}
 	} else
 	{
@@ -5321,18 +5349,18 @@ int match_spamfilter_exempt(TKL *tkl, char user_is_exempt_general, char user_is_
 }
 
 /** Tells if the message content should be hidden in the spamfilter hit log message. Helper function. */
-static int spamfilter_hide_content(int target)
+static int spamfilter_hide_content(int target, SpamfilterShowMessageContentOnHit setting)
 {
 	if ((target == SPAMF_USERMSG) || (target == SPAMF_USERNOTICE))
 	{
-		if (iConf.spamfilter_show_message_content_on_hit == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS)
+		if (setting == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS)
 			return 0;
 		return 1;
 	} else
 	if ((target == SPAMF_CHANMSG) || (target == SPAMF_CHANNOTICE))
 	{
-		if ((iConf.spamfilter_show_message_content_on_hit == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS) ||
-		    (iConf.spamfilter_show_message_content_on_hit == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY))
+		if ((setting == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS) ||
+		    (setting == SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY))
 		{
 			return 0;
 		}
@@ -5351,7 +5379,10 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
                                  int *content_revealed,
                                  char no_stop_first_match)
 {
-	int hide_content = spamfilter_hide_content(target);
+	int hide_content = spamfilter_hide_content(target,
+	                                           tkl->ptr.spamfilter->show_message_content_on_hit ?
+	                                           tkl->ptr.spamfilter->show_message_content_on_hit :
+	                                           iConf.spamfilter_show_message_content_on_hit);
 	int stopped;
 	int highest_action;
 

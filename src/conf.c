@@ -829,18 +829,6 @@ BanTarget ban_target_strtoval(const char *str)
 	return 0; /* invalid */
 }
 
-/** Convert a set::spamfilter::show-message-content-on-hit value */
-SpamfilterShowMessageContentOnHit spamfilter_show_message_content_on_hit_strtoval(const char *s)
-{
-	if (!strcmp(s, "always"))
-		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS;
-	if (!strcmp(s, "channel-only"))
-		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY;
-	if (!strcmp(s, "never"))
-		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_NEVER;
-	return 0;
-}
-
 /* Used for set::automatic-ban-target and set::manual-ban-target */
 const char *ban_target_valtostr(BanTarget v)
 {

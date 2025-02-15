@@ -739,6 +739,7 @@ extern int has_actions_of_type(BanAction *actions, BanActionValue what);
 extern int only_soft_actions(BanAction *actions);
 extern const char *ban_actions_to_string(BanAction *actions);
 extern void lower_ban_action_to_maximum(BanAction *actions, BanActionValue limit_action);
+extern SpamfilterShowMessageContentOnHit spamfilter_show_message_content_on_hit_strtoval(const char *s);
 extern int spamfilter_gettargets(const char *s, Client *client);
 extern char *spamfilter_target_inttostring(int v);
 extern char *our_strcasestr(const char *haystack, const char *needle);
@@ -815,7 +816,9 @@ extern MODVAR TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned shor
                                          const char *setby,
                                          time_t expire_at, time_t set_at,
                                          time_t spamf_tkl_duration, const char *spamf_tkl_reason,
-                                         int input_conversion, int flags);
+                                         int input_conversion,
+                                         SpamfilterShowMessageContentOnHit show_message_content_on_hit,
+                                         int flags);
 extern MODVAR TKL *(*find_tkl_serverban)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_nameban)(int type, const char *name, int hold);

@@ -1222,6 +1222,12 @@ struct BanAction {
 /** Don't ban/kill/block/etc, but do return value as if we did */
 #define TAKE_ACTION_SIMULATE_USER_ACTION	0x2
 
+typedef enum SpamfilterShowMessageContentOnHit {
+	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS = 1,
+	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY = 2,
+	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_NEVER = 3,
+} SpamfilterShowMessageContentOnHit;
+
 /** Server ban sub-struct of TKL entry (KLINE/GLINE/ZLINE/GZLINE/SHUN) */
 struct ServerBan {
 	char *usermask; /**< User mask (can be NULL if 'match' is non-NULL) */
@@ -1255,6 +1261,10 @@ struct Spamfilter {
 	long long hits_except; /**< Spamfilter hits by exempt clients */
 	SecurityGroup *except; /**< Don't run this spamfilter at all for these users (not counting towards hits_except btw) */
 	int input_conversion;	/**< How we should handle the input */
+	/** For overriding set::spamfilter::show-message-content-on-hit
+	 * (0 means use default, so iConf.spamfilter_show_message_content_on_hit)
+	 */
+	SpamfilterShowMessageContentOnHit show_message_content_on_hit;
 };
 
 /** Ban exception sub-struct of TKL entry (ELINE) */
@@ -1295,12 +1305,6 @@ struct SpamExcept {
 	SpamExcept *prev, *next;
 	char name[1];
 };
-
-typedef enum SpamfilterShowMessageContentOnHit {
-	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS = 1,
-	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY = 2,
-	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_NEVER = 3,
-} SpamfilterShowMessageContentOnHit;
 
 /** IRC Counts, used for /LUSERS */
 typedef struct IRCCounts IRCCounts;

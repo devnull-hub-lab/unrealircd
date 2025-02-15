@@ -988,6 +988,20 @@ const char *cmdname_by_spamftarget(int target)
 	return "???";
 }
 
+/** Convert the value for set::spamfilter::show-message-content-on-hit
+ * and spamfilter::show-message-content-on-hit.
+ */
+SpamfilterShowMessageContentOnHit spamfilter_show_message_content_on_hit_strtoval(const char *s)
+{
+	if (!strcmp(s, "always"))
+		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS;
+	if (!strcmp(s, "channel-only"))
+		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY;
+	if (!strcmp(s, "never"))
+		return SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_NEVER;
+	return 0;
+}
+
 /** Add name entries from config */
 void unreal_add_names(NameList **n, ConfigEntry *ce)
 {
