@@ -5,6 +5,16 @@ This is the git version (development version). This is work
 in progress and may not always be a stable version.
 
 ### Enhancements:
+* In the [spamfilter { } ](https://www.unrealircd.org/docs/Spamfilter_block)
+  block two new options:
+  * `input-conversion`: This can be set to `none` to make the
+    spamfilter run against the original text. This in contrast to
+    how default spamfilter behaves where the text is matched against
+    text that has color and control codes removed. Can be useful if
+    you need to match against such a special character.
+  * `show-message-content-on-hit`: this works like
+    [set::show-message-content-on-hit](https://www.unrealircd.org/docs/Set_block#set::spamfilter::show-message-content-on-hit).
+    but on an individual spamfilter basis.
 * If `unrealircd.conf` doesn't exist then we now offer to copy
   the example configuration (showing a list of languages
   to pick from).
