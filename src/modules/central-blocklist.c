@@ -1123,6 +1123,9 @@ int _central_spamreport(Client *client, Client *by, const char *url)
 	char number[16];
 	int cnt = 0;
 
+	if (!client)
+		return 0; /* We only support reporting clients, not clientless IP addresses */
+
 	if (!MyUser(client) || !CBL(client))
 		return 0; /* Only possible if hot-loading */
 

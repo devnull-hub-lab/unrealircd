@@ -49,6 +49,10 @@ in progress and may not always be a stable version.
 
 ### Fixes:
 * Fix compile problems on (upcoming) GCC 15 as it assumes C23 by default.
+  This for future Fedora 42 and possibly Ubuntu 25.04, both scheduled
+  around April 2025.
+* Fix crash on `SPAMREPORT <ip>` (IRCOp-only command) if the
+  central-blocklist module is loaded.
 * Fix make_channel() not checking minimal validity of channel names.
   Only an issue for (bad) trusted remote server traffic.
 
