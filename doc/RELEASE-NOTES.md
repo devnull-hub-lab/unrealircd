@@ -1,8 +1,11 @@
-UnrealIRCd 6.1.10-git
-===============
+UnrealIRCd 6.1.10-rc1
+======================
 
-This is the git version (development version). This is work
-in progress and may not always be a stable version.
+This is the Release Candidate for future version 6.1.10 (scheduled
+for March, 2025). You can help us by testing this release and
+reporting any bugs you find at https://bugs.unrealircd.org/
+
+This is mostly a maintenance release with a few small new features.
 
 ### Enhancements:
 * In the [spamfilter { } ](https://www.unrealircd.org/docs/Spamfilter_block)
@@ -18,7 +21,6 @@ in progress and may not always be a stable version.
 * If `unrealircd.conf` doesn't exist then we now offer to copy
   the example configuration (showing a list of languages
   to pick from).
-* In target-flood log messages now show the message type (eg PRIVMSG).
 * Ship with an offline copy of the wiki documentation
   (`doc/unrealircd_wiki.zim`). This is really only meant for cases
   where the wiki is unavailable, eg you don't have an internet
@@ -41,6 +43,7 @@ in progress and may not always be a stable version.
     JSON logging includes a lot of information about every event so is
     great for auditing purposes and machine readable.
 * Error on some more duplicate config items, eg allow::password.
+* In target-flood log messages we now show the message type (eg PRIVMSG).
 * Make the `./Config` question about
   [remote includes](https://www.unrealircd.org/docs/Remote_includes)
   a bit more clear. The `https://` protocol is always supported and this
